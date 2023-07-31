@@ -1,6 +1,6 @@
 import utility from "./utility";
 
 export default {
-  getData: [],
-  utilityRoutes: [utility],
+	getData: [],
+	utilityRoutes: [utility],
 };

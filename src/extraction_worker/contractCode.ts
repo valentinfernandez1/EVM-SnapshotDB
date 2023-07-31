@@ -11,7 +11,7 @@ const chainWs = new CustomWebSocketProvider(process.env.RPC_WS_URL, process.env.
 
 const extractContractsCode = async (contracts: string[]) => {
    let failed: string[] = []
-   
+
    //TODO: Improve parallelism of requests to the DB
    for await (const contract of contracts) {
       //Contract code won't change so once is stored

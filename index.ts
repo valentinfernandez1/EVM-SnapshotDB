@@ -14,5 +14,5 @@ export { myCache };
 connectWithRetry(mongoDB);
 
 app.listen(PORT, () => {
-  console.log(`Server listing on port ${process.env.PORT}`);
+	console.log(`Server listing on port ${process.env.PORT}`);
 });

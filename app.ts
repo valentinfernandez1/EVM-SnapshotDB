@@ -10,27 +10,27 @@ export const app: Application = express();
 
 //CORS
 const corsOptions = {
-  origin: "*",
-  credentials: true, //access-control-allow-credentials:true
-  optionSuccessStatus: 200,
+	origin: "*",
+	credentials: true, //access-control-allow-credentials:true
+	optionSuccessStatus: 200,
 };
 
 app.use(cors(corsOptions));
 app.use(logger("dev"));
 
 for (const route of routes.getData) {
-  app.use(express.json({ limit: "50mb" })).use("/v1", route);
+	app.use(express.json({ limit: "50mb" })).use("/v1", route);
 }
 
 app.use(cors(corsOptions));
 
 //Utility
 for (const route of routes.utilityRoutes) {
-  app.use(express.json({ limit: "50mb" })).use("/", route);
+	app.use(express.json({ limit: "50mb" })).use("/", route);
 }
 
 app.all("*", (req: express.Request) => {
-  throw new NotFoundError(req.path);
+	throw new NotFoundError(req.path);
 });
 
 //Error Handlers
