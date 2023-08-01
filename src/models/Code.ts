@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 export interface I_Code {
 	_id?: string;
 	address: string;
-	code: string;
+	code?: string;
 }
 
 const CodeShema = new mongoose.Schema({

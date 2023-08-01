@@ -4,8 +4,9 @@ export interface I_Storage {
     _id?: string;
     address: string;
     storageState: I_StorageState[];
-    // If the storage load fails it can be restarted from the last queried key
-    nextHash?: string
+    nextHash?: string,
+    //Allow to check if the state was fully queried or there was an error
+    complete?: boolean
 }
 
 export interface I_StorageState {
@@ -17,7 +18,7 @@ export interface I_StorageState {
 const StorageSchema = new mongoose.Schema({
     //Could probably be linked to the contract schema
     //But less keep it simple, plus we dont really care about
-    //data redundancie here
+    //data redundancy here
     address: {
         type: String,
         required: true,
@@ -26,7 +27,7 @@ const StorageSchema = new mongoose.Schema({
         {
             key: {
                 type: String,
-                required: true,
+                required: false,
             },
             value: {
                 type: String,
@@ -34,11 +35,9 @@ const StorageSchema = new mongoose.Schema({
             }
         }
     ],
-    nextHash: {
-        type: String,
-        // If the storage was fully queried this will
-        // be null meaning that it is complete
-        required: false,
+    complete: {
+        type: Boolean,
+        defaul: false,
     }
 });
 

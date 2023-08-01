@@ -3,7 +3,7 @@ import { CustomWebSocketProvider } from "../helpers/customWebsocketProvider";
 import Code, { I_Code } from "../models/Code";
 
 const contracts: string[] = [
-   "0xEd52047a29A47764A06563FA4c84aEE51c253Eaf",
+   "0xE74971994015eeb2a0Ee881C955A6F4262c4E048",
    "0x35a03F8bb63F02ad03C0AAEB589d44541504064D",
    "0x8219ec4d7C60053A9f575fF6544df6050037bBc5"
 ]
