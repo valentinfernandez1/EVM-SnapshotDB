@@ -13,17 +13,6 @@ const chainWs = new CustomWebSocketProvider(process.env.RPC_WS_URL, process.env.
 const extractContractsCode = async (contracts: string[]) => {
    let failed: string[] = []
 
-
-const web3 = new Web3();
-
-const value1 = '0x00000000000000000000000067207a5353e78aa5859449172bce8f653fee117a';
-const value2 = '0xc22bc11c71fccd17556f61a8a760aaab7e80d32405436c9a793b10ce8880ed24';
-
-const concatenatedValues = value1 + value2;
-const hash = web3.utils.(concatenatedValues);
-
-console.log(hash);
-
    //TODO: Improve parallelism of requests to the DB
    for await (const contract of contracts) {
       //Contract code won't change so once is stored
