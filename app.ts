@@ -18,7 +18,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(logger("dev"));
 
-for (const route of routes.getData) {
+for (const route of routes.v1Routes) {
 	app.use(express.json({ limit: "50mb" })).use("/v1", route);
 }
 
