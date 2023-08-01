@@ -10,6 +10,8 @@ const connectWithRetry = async (mongoURL) => {
 		.connect(mongoURL)
 		.then(() => {
 			console.log("Connected to MongoDB");
+			//TODO: Move this to either an endpoint or a function that initializes all tasks
+			//They are currently set up hero to be able to test them as soon as the server starts
 			accountsData.extractAccounts(accountsData.accounts);
 			contractData.extractContractsCode(contractData.contracts)
 		})

@@ -1,12 +1,12 @@
 import mongoose from "mongoose";
 
-export interface I_Contract {
+export interface I_Code {
 	_id?: string;
 	address: string;
 	code: string;
 }
 
-const ContractShema = new mongoose.Schema({
+const CodeShema = new mongoose.Schema({
 	address: {
 		type: String,
 		required: true,
@@ -17,4 +17,4 @@ const ContractShema = new mongoose.Schema({
 	},
 });
 
-export default mongoose.model("Contract", ContractShema);
+export default mongoose.model("Code", CodeShema);

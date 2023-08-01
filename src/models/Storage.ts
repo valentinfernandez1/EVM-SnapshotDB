@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 
-export interface I_ContractStorage {
+export interface I_Storage {
     _id?: string;
     address: string;
-    storage: I_StorageState[];
+    storageState: I_StorageState[];
     // If the storage load fails it can be restarted from the last queried key
     nextHash?: string
 }
@@ -14,7 +14,7 @@ export interface I_StorageState {
     value: string;
 }
 
-const ContractStorageSchema = new mongoose.Schema({
+const StorageSchema = new mongoose.Schema({
     //Could probably be linked to the contract schema
     //But less keep it simple, plus we dont really care about
     //data redundancie here
@@ -22,7 +22,7 @@ const ContractStorageSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    storage: [
+    storageState: [
         {
             key: {
                 type: String,
@@ -42,4 +42,4 @@ const ContractStorageSchema = new mongoose.Schema({
     }
 });
 
-export default mongoose.model("ContractStorage", ContractStorageSchema);
+export default mongoose.model("Storage", StorageSchema);

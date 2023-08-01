@@ -1,14 +1,15 @@
-import { I_ContractStorage, I_StorageState } from "models/ContractStorage";
+import { I_Storage, I_StorageState } from "models/Storage";
 import { CustomWebSocketProvider } from "../helpers/customWebsocketProvider";
-import Contract, { I_Contract } from "../models/Contract";
+import Code, { I_Code } from "../models/Code";
 
 const chainWs = new CustomWebSocketProvider(process.env.RPC_WS_URL, process.env.BESU_API_KEY);
 
-//Extracting 2500 takes around 0,5s (This can be tweaked to optimezed)
+//Extracting 2500 takes around 3,7s (This can be tweaked to optimized)
 const amountOfKeys = 2500
 
 const extractContractsStorage = async () => {
     let failed: string[] = []
+
 
 
 }
@@ -19,31 +20,29 @@ const getPartialStorage = async (
     amountOfKeys: number,   //Amount to retrieve from the chain
     from_key?: string,      //If null it starts from the first key in storage
     block_number?: string
-): Promise<I_ContractStorage> => {
+): Promise<I_Storage> => {
     let starting_key = "0x0000000000000000000000000000000000000000000000000000000000000000"
     from_key ? starting_key = from_key : null;
 
     let block = "latest"
     block_number ? block = block_number : null
 
-    let raw_storage = (await chainWs.send('debug_storageRangeAt', [
+    let response = await chainWs.send('debug_storageRangeAt', [
         block,
         0,
         contract,
         starting_key,
         amountOfKeys
-    ])).result;
+    ]);
 
-    console.log(raw_storage);
-
-    let partial_storage = formatStorageData(raw_storage.storage);
+    let partial_storage = formatStorageData(response.storage);
 
     let nextHash = null;
-    !raw_storage.complete ? nextHash = raw_storage.nextKey : null;
+    !response.complete ? nextHash = response.nextKey : null;
 
-    let partialContractStorage: I_ContractStorage = {
+    let partialContractStorage: I_Storage = {
         address: contract,
-        storage: partial_storage,
+        storageState: partial_storage,
         nextHash
     }
 
@@ -51,11 +50,19 @@ const getPartialStorage = async (
 }
 
 const formatStorageData = (raw_storage: any): I_StorageState[] => {
-    let data: I_StorageState[] = []
+    let storageData: I_StorageState[] = []
 
+    Object.keys(raw_storage).forEach(hash => {
+        if (raw_storage[hash].key){
+            storageData.push({
+                key: raw_storage[hash].key, 
+                value: raw_storage[hash].value
+            });
+        }
+    });
 
-
-    return data
+    return storageData
 }
+
 
 export default { extractContractsStorage };
