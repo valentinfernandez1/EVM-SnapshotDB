@@ -4,18 +4,36 @@ import Code, { I_Code } from "../models/Code";
 
 const chainWs = new CustomWebSocketProvider(process.env.RPC_WS_URL, process.env.BESU_API_KEY);
 
+const pageLimit = 3
+
 const extractStorages = async () => {
     let failed: string[] = []
+    let skip = 0
 
-    //Get contract addresses, TODO: Implement pagination
-    let contracts: I_Code[] = await Code.find({}, "address -_id");
+    //Get amount of contracts
+    let contractAmount: number = await Code.countDocuments();
+    console.log(`📦 ${contractAmount} contract storages to be scraped`);
 
-    let storagePromises = [];
-    for (const contract of contracts) {
-        storagePromises.push(getContractStorage(contract.address))
+    let iterations = Math.ceil(contractAmount/pageLimit);
+    for (let i = 0; i < iterations; i++){
+        console.log(`🟡 Iteration ${i+1} of ${iterations} started`)
+        //Get contract addresses
+        let contracts: I_Code[] = await Code.find(
+            {}, 
+            "address -_id", 
+            { skip: skip, limit: pageLimit }
+        );
+
+        let storagePromises = [];
+        for (const contract of contracts) {
+            storagePromises.push(getContractStorage(contract.address))
+        }
+        await Promise.all(storagePromises)
+        skip = skip + pageLimit;
+
+        console.log(`🔵 Iteration ${i+1} of ${iterations} done`)
     }
-
-    await Promise.all(storagePromises)
+   
     console.log("Finished")
 }
 
@@ -51,7 +69,7 @@ const getContractStorage = async (contract: string) => {
         }
     }
 
-    console.log(`💯 Succesfully stored contract ${contract.slice(0,3)}..${contract.slice(40,41)}`)
+    console.log(`💯 Succesfully stored contract ${contract.slice(0,5)}..${contract.slice(38,41)}`)
 }
 
 //Obtain a certain amount of keys from a contract Storage starting from a storage key 
