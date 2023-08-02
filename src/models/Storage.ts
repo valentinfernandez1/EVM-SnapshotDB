@@ -7,6 +7,8 @@ export interface I_Storage {
     nextHash?: string,
     //Allow to check if the state was fully queried or there was an error
     complete?: boolean
+    //If document has reached limit size
+    full?: boolean
 }
 
 export interface I_StorageState {
@@ -16,13 +18,7 @@ export interface I_StorageState {
 }
 
 const StorageSchema = new mongoose.Schema({
-    //Could probably be linked to the contract schema
-    //But less keep it simple, plus we dont really care about
-    //data redundancy here
-    address: {
-        type: String,
-        required: true,
-    },
+    address: { type: String, required: true },
     storageState: [
         {
             key: {
@@ -35,10 +31,8 @@ const StorageSchema = new mongoose.Schema({
             }
         }
     ],
-    complete: {
-        type: Boolean,
-        defaul: false,
-    }
+    complete: { type: Boolean, default: false },
+    full: { type: Boolean, default: false }
 });
 
 export default mongoose.model("Storage", StorageSchema);
