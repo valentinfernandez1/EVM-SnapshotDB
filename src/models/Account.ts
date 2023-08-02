@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 export interface I_Account {
 	_id?: string;
 	address: string;
-	balance: bigint;
+	balance: string;
 	nonce: number;
 }
 
@@ -13,7 +13,7 @@ const AccountShema = new mongoose.Schema({
 		required: true,
 	},
 	balance: {
-		type: BigInt,
+		type: String,
 		required: true,
 	},
 	nonce: {

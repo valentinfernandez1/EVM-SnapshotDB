@@ -1,12 +1,8 @@
 import Storage, { I_Storage, I_StorageState } from "../models/Storage";
-import { CustomWebSocketProvider } from "../helpers/customWebsocketProvider";
 import Code, { I_Code } from "../models/Code";
+import {amountOfKeys, chainWs, pageLimit} from "../constants/utility";
 
-const chainWs = new CustomWebSocketProvider(process.env.RPC_WS_URL, process.env.BESU_API_KEY);
-
-const pageLimit = 3
-
-const extractStorages = async () => {
+export const extractStorages = async () => {
     let failed: string[] = []
     let skip = 0
 
@@ -34,11 +30,8 @@ const extractStorages = async () => {
         console.log(`🔵 Iteration ${i+1} of ${iterations} done`)
     }
    
-    console.log("Finished")
+    console.log("✅ Storage scrapping finished")
 }
-
-//Extracting 2500 takes around 3,7s (This can be tweaked to optimized)
-const amountOfKeys = 7500;
 
 const getContractStorage = async (contract: string) => {
     let exit = false;
@@ -120,6 +113,3 @@ const formatStorageData = (raw_storage: any): I_StorageState[] => {
 
     return storageData
 }
-
-
-export default { extractStorages };

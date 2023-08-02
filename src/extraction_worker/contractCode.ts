@@ -1,16 +1,7 @@
-import Web3 from "web3";
-import { CustomWebSocketProvider } from "../helpers/customWebsocketProvider";
+import { chainWs } from "../constants/utility";
 import Code, { I_Code } from "../models/Code";
 
-const contracts: string[] = [
-   "0xE74971994015eeb2a0Ee881C955A6F4262c4E048",
-   "0x35a03F8bb63F02ad03C0AAEB589d44541504064D",
-   "0x8219ec4d7C60053A9f575fF6544df6050037bBc5"
-]
-
-const chainWs = new CustomWebSocketProvider(process.env.RPC_WS_URL, process.env.BESU_API_KEY);
-
-const extractContractsCode = async (contracts: string[]) => {
+export const extractContractsCode = async (contracts: string[]) => {
    let failed: string[] = []
 
    //TODO: Improve parallelism of requests to the DB
@@ -38,4 +29,3 @@ const getContract = async (contract: string, block?: number): Promise<I_Code> =>
    
    return data
 }
-export default {extractContractsCode, contracts};
