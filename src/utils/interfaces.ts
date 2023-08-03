@@ -9,3 +9,9 @@ export interface I_StorageDigest {
         storage_keys?: number
     },
 }
+
+export interface I_Transaction {
+    from: string,
+    to: string,
+    contractDeployedAt: string
+}

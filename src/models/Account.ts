@@ -3,8 +3,8 @@ import mongoose from "mongoose";
 export interface I_Account {
 	_id?: string;
 	address: string;
-	balance: string;
-	nonce: number;
+	balance?: string;
+	nonce?: number;
 }
 
 const AccountShema = new mongoose.Schema({
@@ -14,11 +14,11 @@ const AccountShema = new mongoose.Schema({
 	},
 	balance: {
 		type: String,
-		required: true,
+		required: false,
 	},
 	nonce: {
 		type: mongoose.Schema.Types.Number,
-		required: true,
+		required: false,
 	},
 });
 
