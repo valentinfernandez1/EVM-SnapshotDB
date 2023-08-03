@@ -1,6 +1,6 @@
-import { accounts, contracts } from "../constants/testAccounts";
+//import { accounts } from "../constants/testAccounts";
 import { extractAccounts } from "./accountsData";
-import { extractContractsCode } from "./contractCode";
+import { getAccountsFromHistory } from "./accountsFromHistory";
 import { extractStorages } from "./contractStorage";
 
 require('dotenv').config();
@@ -15,9 +15,8 @@ data
 
 const block = process.env.BLOCK_HASH;
 
-export const start_extraction_workers = () => {
-    extractAccounts(accounts, block);
-	extractContractsCode(contracts, block).then(() => {
-        extractStorages(block)
-    });
+export const start_extraction_workers = async () => {
+    let accounts: string[] = await getAccountsFromHistory();
+    await extractAccounts(accounts, block);
+	//extractStorages(block);
 }

@@ -11,6 +11,7 @@ export class CustomWebSocketProvider extends WebSocketProvider {
 			headers: headers,
 		};
 		const webSocket = new WebSocket(url, options);
+		
 		super(webSocket);
 	}
 }
@@ -19,4 +20,5 @@ export const chainWs = new CustomWebSocketProvider(process.env.RPC_WS_URL, proce
 export const pageLimit: number = 20;
 
 //Extracting 2500 takes around 3,7s (This can be tweaked to optimized)
-export const amountOfKeys: number = 7500;
+export const amountOfKeys: number = 145000;
+

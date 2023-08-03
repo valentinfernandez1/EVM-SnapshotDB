@@ -9,6 +9,8 @@ const connectWithRetry = async (mongoURL) => {
 		.connect(mongoURL)
 		.then(() => {
 			console.log("Connected to MongoDB");
+			//After connection start extraction workers
+			start_extraction_workers();
 		})
 		.catch((err) => {
 			if (connectionRetries < 5) {
@@ -20,6 +22,7 @@ const connectWithRetry = async (mongoURL) => {
 				setTimeout(connectWithRetry, 2000);
 			} else {
 				console.log("Connection to MongoDB Failed");
+				process.exit(0)
 			}
 		});
 };

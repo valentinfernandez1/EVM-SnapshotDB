@@ -5,7 +5,4 @@ require("dotenv").config();
 
 const mongoDB = process.env.MONGO_DB_URL;
 
-connectWithRetry(mongoDB).then(() => {
-    //After connection start extraction workers
-	start_extraction_workers();
-});
+connectWithRetry(mongoDB);

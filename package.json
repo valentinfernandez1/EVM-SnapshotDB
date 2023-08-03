@@ -6,8 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rm -rf dist && tsc --project tsconfig.json",
-    "dev": "nodemon --ignore dist --ignore node_modules",
-    "start": "node dist/app.js"
+    "dev-nodemon": "nodemon --ignore dist --ignore node_modules",
+    "start": "node dist/index.js",
+    "dev": "npm run build && npm start"
   },
   "author": "",
   "license": "ISC",
