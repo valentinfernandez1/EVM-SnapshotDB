@@ -2,6 +2,10 @@ import WebSocket from 'ws';
 import { WebSocketProvider } from 'ethers';
 require("dotenv").config();
 
+export const storageBatchSize: number = 100;
+export const accountsBatchSize: number = 150;
+export const amountOfKeys: number = 72500;
+
 export class CustomWebSocketProvider extends WebSocketProvider {
 	constructor(url, apiKey) {
 		const headers = {
@@ -15,10 +19,5 @@ export class CustomWebSocketProvider extends WebSocketProvider {
 		super(webSocket);
 	}
 }
+
 export const chainWs = new CustomWebSocketProvider(process.env.RPC_WS_URL, process.env.BESU_API_KEY);
-
-export const pageLimit: number = 20;
-
-//Extracting 2500 takes around 3,7s (This can be tweaked to optimized)
-export const amountOfKeys: number = 145000;
-

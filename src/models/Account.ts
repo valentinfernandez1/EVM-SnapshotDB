@@ -20,6 +20,6 @@ const AccountShema = new mongoose.Schema({
 		type: mongoose.Schema.Types.Number,
 		required: false,
 	},
-});
+}, {collection: 'balancesAndNonces'});
 
 export default mongoose.model("Account", AccountShema);

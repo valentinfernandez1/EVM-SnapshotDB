@@ -1,23 +1,26 @@
 import Account, { I_Account } from "../models/Account";
-import { chainWs, pageLimit } from "../constants/utility";
+import { chainWs, accountsBatchSize } from "../constants/utility";
 import Code, { I_Code } from "../models/Code";
 
 export const extractAccounts = async (accounts: string[], block?: string) => {
     let skip = 0
+    chainWs.on('error', (err) => {
+        console.log('ws error ',err)
+    })
 
     console.log(`👥 ${accounts.length} accounts to be scraped`);
 
-    let iterations = Math.ceil(accounts.length / pageLimit);
+    let iterations = Math.ceil(accounts.length / accountsBatchSize);
 
     for (let i = 0; i < iterations; i++) {
         console.log(`🟡 Account Extraction - Iteration ${i + 1} of ${iterations}`)
 
         let accountPromises = [];
-        for (const account of accounts.slice(skip, skip + pageLimit)) {
+        for (const account of accounts.slice(skip, skip + accountsBatchSize)) {
             accountPromises.push(getAccountData(account, block))
         }
         await Promise.all(accountPromises)
-        skip = skip + pageLimit;
+        skip = skip + accountsBatchSize;
 
         console.log(`🔵 Account Extraction - Iteration ${i + 1} of ${iterations} done`)
     }

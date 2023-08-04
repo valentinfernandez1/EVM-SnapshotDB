@@ -18,5 +18,5 @@ const block = process.env.BLOCK_HASH;
 export const start_extraction_workers = async () => {
     let accounts: string[] = await getAccountsFromHistory();
     await extractAccounts(accounts, block);
-	//extractStorages(block);
+	extractStorages(block);
 }

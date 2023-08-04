@@ -1,26 +1,30 @@
 import Storage, { I_Storage, I_StorageState } from "../models/Storage";
 import Code, { I_Code } from "../models/Code";
-import { amountOfKeys, chainWs, pageLimit } from "../constants/utility";
+import { amountOfKeys, chainWs, storageBatchSize } from "../constants/utility";
 
 //TODO: Add blocknumber to query
 //If this takes longer than the block time 
 //It will be pulling the state from different storages
 export const extractStorages = async (block?: string) => {
+    chainWs.on('error', (err) => {
+        console.log('ws error ',err)
+    })
+
     let failed: string[] = []
     let skip = 0
 
     //Get amount of contracts
     let contractAmount: number = await Code.countDocuments();
     console.log(`📦 ${contractAmount} contract storages to be scraped`);
-
-    let iterations = Math.ceil(contractAmount / pageLimit);
+    storageBatchSize
+    let iterations = Math.ceil(contractAmount / storageBatchSize);
     for (let i = 0; i < iterations; i++) {
         console.log(`🟡 Iteration ${i + 1} of ${iterations} started`)
         //Get contract addresses
         let contracts: I_Code[] = await Code.find(
             {},
             "address -_id",
-            { skip: skip, limit: pageLimit }
+            { skip: skip, limit: storageBatchSize }
         );
 
         let storagePromises = [];
@@ -28,7 +32,7 @@ export const extractStorages = async (block?: string) => {
             storagePromises.push(getContractStorage(contract.address, block))
         }
         await Promise.all(storagePromises)
-        skip = skip + pageLimit;
+        skip = skip + storageBatchSize;
 
         console.log(`🔵 Iteration ${i + 1} of ${iterations} done`)
     }
@@ -77,7 +81,7 @@ const getContractStorage = async (contract: string, block?: string) => {
         }
     }
 
-    console.log(`💯 Succesfully stored contract ${contract.slice(0, 5)}..${contract.slice(38, 41)}`)
+    console.log(`💯 Succesfully stored contract ${contract}`)
 }
 
 //Obtain a certain amount of keys from a contract Storage starting from a storage key 
@@ -93,6 +97,7 @@ const getPartialStorage = async (
     let blockHash = "latest"
     block ? blockHash = block : null
 
+    
     let response = await chainWs.send('debug_storageRangeAt', [
         blockHash,
         0,
@@ -101,6 +106,7 @@ const getPartialStorage = async (
         amountOfKeys
     ]);
 
+    console.log(`${contract} - ${(new Date()).toTimeString().split(' ')[0]}` )
     let partial_storage = formatStorageData(response.storage);
 
     let nextHash = null;
