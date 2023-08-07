@@ -1,12 +1,13 @@
 import Storage, { I_Storage, I_StorageState } from "../models/Storage";
 import Code, { I_Code } from "../models/Code";
-import { amountOfKeys, chainWs, storageConcurrentLimit } from "../constants/utility";
+import { BLOCK_HASH, amountOfKeys, chainWs, storageConcurrentLimit } from "../constants/utility";
 
 const timeout = 2000;
+const block = BLOCK_HASH;
 
-export const extractStorages = async (block: string) => {
+export const extractStorages = async () => {
     console.log("🔎 Filtering already stored Storage contracts")
-    let contracts: string[] = await getContractsToScrape(block);
+    let contracts: string[] = await getContractsToScrape();
     console.log(`📦 ${contracts.length} contract storages to be scraped`);
     
     let ongoingPromises = 0 
@@ -17,7 +18,7 @@ export const extractStorages = async (block: string) => {
             
             if (contractAddress == null) continue;
             storagePromises.push(
-                getContractStorage(contractAddress, block).then(() => {
+                getContractStorage(contractAddress).then(() => {
                     ongoingPromises -= 1;
                 })
             )
@@ -31,7 +32,7 @@ export const extractStorages = async (block: string) => {
     console.log("✅ Storage scrapping finished")
 }
 
-const getContractsToScrape = async (block: string): Promise<string[]>  => {
+const getContractsToScrape = async (): Promise<string[]>  => {
     //Get contract list
     let contracts: string[] = (await Code.find({}, "address -_id")).map(contract => {
         return contract.address
@@ -48,13 +49,13 @@ const getContractsToScrape = async (block: string): Promise<string[]>  => {
     return contracts;
 }
 
-const getContractStorage = async (contract: string, block: string) => {
+const getContractStorage = async (contract: string) => {
     let exit = false;
     let created = false;
     let nextHash = null;
 
     while (!exit) {
-        let partial: I_Storage = await getPartialStorage(contract, amountOfKeys, block, nextHash);
+        let partial: I_Storage = await getPartialStorage(contract, amountOfKeys, nextHash);
 
         //If no nextHash the contract query is complete 
         if (!partial.nextHash) {
@@ -95,7 +96,6 @@ const getContractStorage = async (contract: string, block: string) => {
 const getPartialStorage = async (
     contract: string,
     amountOfKeys: number,   //Amount to retrieve from the chain
-    block: string,
     from_key?: string      //If null it starts from the first key in storage
 ): Promise<I_Storage> => {
     let starting_key = "0x0000000000000000000000000000000000000000000000000000000000000000"
@@ -151,5 +151,6 @@ const handleStorageOverflow = async (partialStorage: I_Storage) => {
     await Storage.create({
         address: partialStorage.address,
         storageState: partialStorage.storageState,
+        block: partialStorage.block
     })
 }

@@ -7,8 +7,8 @@ import { extractStorages } from "./contractStorage";
 require('dotenv').config();
 
 export const start_extraction_workers = async () => {
-    let accounts: string[] = await getAccountsToQuery(BLOCK_HASH);
-    await extractAccounts(accounts, BLOCK_HASH);
+    let accounts: string[] = await getAccountsToQuery();
+    await extractAccounts(accounts);
     //TODO: Filter completed for block and improve queue process
-	extractStorages(BLOCK_HASH); 
+	extractStorages(); 
 }

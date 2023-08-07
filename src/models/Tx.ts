@@ -19,6 +19,6 @@ const TxSchema = new mongoose.Schema({
 		type: String,
 		required: false,
 	},
-});
+}, {collection: 'txes'});
 
 export default mongoose.model("Tx", TxSchema);

@@ -1,8 +1,10 @@
 import Account, { I_Account } from "../models/Account";
-import { chainWs, accountsBatchSize } from "../constants/utility";
+import { chainWs, accountsBatchSize, BLOCK_HASH } from "../constants/utility";
 import Code, { I_Code } from "../models/Code";
 
-export const extractAccounts = async (accounts: string[], block: string) => {
+const block = BLOCK_HASH;
+
+export const extractAccounts = async (accounts: string[]) => {
     
     console.log(`👥 ${accounts.length} accounts to be scraped`);
      
@@ -13,17 +15,15 @@ export const extractAccounts = async (accounts: string[], block: string) => {
 
         let accountPromises = [];
         for (const account of accounts.slice(skip, skip + accountsBatchSize)) {
-            accountPromises.push(getAccountData(account, block))
+            accountPromises.push(getAccountData(account))
         }
         await Promise.all(accountPromises)
         skip = skip + accountsBatchSize;
-
-        console.log(`🔵 Account Extraction - Iteration ${i + 1} of ${iterations} done`)
     }
     console.log(`✅ Account scrapping done`);
 }
 
-const getAccountData = async (account: string, block: string): Promise<I_Account> => {
+const getAccountData = async (account: string): Promise<I_Account> => {
     let accountData: I_Account = {
         address: account,
         balance: (await chainWs.getBalance(account, block)).toString(),
@@ -39,7 +39,7 @@ const getAccountData = async (account: string, block: string): Promise<I_Account
         console.log(err)
     });
 
-    const contractCode: I_Code = await getCode(account, block);
+    const contractCode: I_Code = await getCode(account);
 
     //Verify if the account is not a contract
     if (contractCode.code.length <= 2) { return }
@@ -53,7 +53,7 @@ const getAccountData = async (account: string, block: string): Promise<I_Account
     });
 }
 
-const getCode = async (account: string, block: string): Promise<I_Code> => {
+const getCode = async (account: string): Promise<I_Code> => {
     let data: I_Code = {
         address: account,
         code: await chainWs.getCode(account, block)
