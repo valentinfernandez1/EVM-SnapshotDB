@@ -1,52 +1,60 @@
 import Storage, { I_Storage, I_StorageState } from "../models/Storage";
 import Code, { I_Code } from "../models/Code";
-import { amountOfKeys, chainWs, storageBatchSize } from "../constants/utility";
+import { amountOfKeys, chainWs, storageConcurrentLimit } from "../constants/utility";
 
-//TODO: Add blocknumber to query
-//If this takes longer than the block time 
-//It will be pulling the state from different storages
-export const extractStorages = async (block?: string) => {
-    chainWs.on('error', (err) => {
-        console.log('ws error ',err)
-    })
+const timeout = 2000;
 
-    let failed: string[] = []
-    let skip = 0
-
-    //Get amount of contracts
-    let contractAmount: number = await Code.countDocuments();
-    console.log(`📦 ${contractAmount} contract storages to be scraped`);
-    storageBatchSize
-    let iterations = Math.ceil(contractAmount / storageBatchSize);
-    for (let i = 0; i < iterations; i++) {
-        console.log(`🟡 Iteration ${i + 1} of ${iterations} started`)
-        //Get contract addresses
-        let contracts: I_Code[] = await Code.find(
-            {},
-            "address -_id",
-            { skip: skip, limit: storageBatchSize }
-        );
-
-        let storagePromises = [];
-        for (const contract of contracts) {
-            storagePromises.push(getContractStorage(contract.address, block))
+export const extractStorages = async (block: string) => {
+    console.log("🔎 Filtering already stored Storage contracts")
+    let contracts: string[] = await getContractsToScrape(block);
+    console.log(`📦 ${contracts.length} contract storages to be scraped`);
+    
+    let ongoingPromises = 0 
+    let storagePromises = [];
+    while(contracts.length > 0){
+        for (ongoingPromises; ongoingPromises < storageConcurrentLimit; ongoingPromises++) {
+            let contractAddress = contracts.pop()
+            
+            if (contractAddress == null) continue;
+            storagePromises.push(
+                getContractStorage(contractAddress, block).then(() => {
+                    ongoingPromises -= 1;
+                })
+            )
         }
-        await Promise.all(storagePromises)
-        skip = skip + storageBatchSize;
-
-        console.log(`🔵 Iteration ${i + 1} of ${iterations} done`)
+        
+        await new Promise((resolve) => setTimeout(resolve, Number(timeout)));
     }
+
+    await Promise.all(storagePromises)
 
     console.log("✅ Storage scrapping finished")
 }
 
-const getContractStorage = async (contract: string, block?: string) => {
+const getContractsToScrape = async (block: string): Promise<string[]>  => {
+    //Get contract list
+    let contracts: string[] = (await Code.find({}, "address -_id")).map(contract => {
+        return contract.address
+    });
+    //Get already stored Storages for this block
+    let storages: string[] = (await Storage.find({block: { $eq: block }, complete: true}, "address -_id")).map(storage => {
+        return storage.address
+    });
+
+    contracts = contracts.filter(contract => {
+        return storages.indexOf(contract) === -1
+    })
+
+    return contracts;
+}
+
+const getContractStorage = async (contract: string, block: string) => {
     let exit = false;
     let created = false;
     let nextHash = null;
 
     while (!exit) {
-        let partial: I_Storage = await getPartialStorage(contract, amountOfKeys, nextHash, block);
+        let partial: I_Storage = await getPartialStorage(contract, amountOfKeys, block, nextHash);
 
         //If no nextHash the contract query is complete 
         if (!partial.nextHash) {
@@ -56,7 +64,7 @@ const getContractStorage = async (contract: string, block?: string) => {
 
         nextHash = partial.nextHash
 
-        //If this is the first iteration delete just in case and create model
+        //If this is the first iteration delete just in case it has old data
         if (!created) {
             await Storage.deleteMany({ address: contract });
             await Storage.create(partial)
@@ -80,7 +88,6 @@ const getContractStorage = async (contract: string, block?: string) => {
             }
         }
     }
-
     console.log(`💯 Succesfully stored contract ${contract}`)
 }
 
@@ -88,25 +95,21 @@ const getContractStorage = async (contract: string, block?: string) => {
 const getPartialStorage = async (
     contract: string,
     amountOfKeys: number,   //Amount to retrieve from the chain
-    from_key?: string,      //If null it starts from the first key in storage
-    block?: string
+    block: string,
+    from_key?: string      //If null it starts from the first key in storage
 ): Promise<I_Storage> => {
     let starting_key = "0x0000000000000000000000000000000000000000000000000000000000000000"
     from_key ? starting_key = from_key : null;
-
-    let blockHash = "latest"
-    block ? blockHash = block : null
-
     
     let response = await chainWs.send('debug_storageRangeAt', [
-        blockHash,
+        block,
         0,
         contract,
         starting_key,
         amountOfKeys
     ]);
 
-    console.log(`${contract} - ${(new Date()).toTimeString().split(' ')[0]}` )
+    console.log(`🕒 ${contract} - ${(new Date()).toTimeString().split(' ')[0]}` )
     let partial_storage = formatStorageData(response.storage);
 
     let nextHash = null;
@@ -116,7 +119,8 @@ const getPartialStorage = async (
         address: contract,
         storageState: partial_storage,
         nextHash,
-        complete: response.complete
+        complete: response.complete,
+        block
     }
 
     return partialContractStorage

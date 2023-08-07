@@ -2,16 +2,12 @@ import Account, { I_Account } from "../models/Account";
 import { chainWs, accountsBatchSize } from "../constants/utility";
 import Code, { I_Code } from "../models/Code";
 
-export const extractAccounts = async (accounts: string[], block?: string) => {
-    let skip = 0
-    chainWs.on('error', (err) => {
-        console.log('ws error ',err)
-    })
-
+export const extractAccounts = async (accounts: string[], block: string) => {
+    
     console.log(`👥 ${accounts.length} accounts to be scraped`);
-
+     
+    let skip = 0
     let iterations = Math.ceil(accounts.length / accountsBatchSize);
-
     for (let i = 0; i < iterations; i++) {
         console.log(`🟡 Account Extraction - Iteration ${i + 1} of ${iterations}`)
 
@@ -27,11 +23,12 @@ export const extractAccounts = async (accounts: string[], block?: string) => {
     console.log(`✅ Account scrapping done`);
 }
 
-const getAccountData = async (account: string, block?: string): Promise<I_Account> => {
+const getAccountData = async (account: string, block: string): Promise<I_Account> => {
     let accountData: I_Account = {
         address: account,
         balance: (await chainWs.getBalance(account, block)).toString(),
-        nonce: await chainWs.getTransactionCount(account, block)
+        nonce: await chainWs.getTransactionCount(account, block),
+        block
     }
 
     Account.updateOne(
@@ -56,7 +53,7 @@ const getAccountData = async (account: string, block?: string): Promise<I_Accoun
     });
 }
 
-const getCode = async (account: string, block?: string): Promise<I_Code> => {
+const getCode = async (account: string, block: string): Promise<I_Code> => {
     let data: I_Code = {
         address: account,
         code: await chainWs.getCode(account, block)
@@ -64,3 +61,4 @@ const getCode = async (account: string, block?: string): Promise<I_Code> => {
 
     return data
 }
+

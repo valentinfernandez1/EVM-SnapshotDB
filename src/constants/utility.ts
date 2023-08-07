@@ -2,9 +2,10 @@ import WebSocket from 'ws';
 import { WebSocketProvider } from 'ethers';
 require("dotenv").config();
 
-export const storageBatchSize: number = 100;
+export const storageConcurrentLimit: number = 75;
 export const accountsBatchSize: number = 150;
 export const amountOfKeys: number = 72500;
+export const BLOCK_HASH: string = process.env.BLOCK_HASH;
 
 export class CustomWebSocketProvider extends WebSocketProvider {
 	constructor(url, apiKey) {

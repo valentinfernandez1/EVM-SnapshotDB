@@ -9,6 +9,7 @@ export interface I_Storage {
     complete?: boolean
     //If document has reached limit size
     full?: boolean
+    block?: string
 }
 
 export interface I_StorageState {
@@ -32,7 +33,11 @@ const StorageSchema = new mongoose.Schema({
         }
     ],
     complete: { type: Boolean, default: false },
-    full: { type: Boolean, default: false }
+    full: { type: Boolean, default: false },
+    block: {
+        type: String,
+        required: true
+    }
 });
 
 export default mongoose.model("Storage", StorageSchema);
