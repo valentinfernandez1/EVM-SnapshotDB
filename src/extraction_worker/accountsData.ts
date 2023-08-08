@@ -26,8 +26,8 @@ export const extractAccounts = async (accounts: string[]) => {
 const getAccountData = async (account: string): Promise<I_Account> => {
     let accountData: I_Account = {
         address: account,
-        balance: (await chainWs.getBalance(account, block)).toString(),
-        nonce: await chainWs.getTransactionCount(account, block),
+        balance: (await chainWs.eth.getBalance(account, block)).toString(),
+        nonce: Number(await chainWs.eth.getTransactionCount(account, block)),
         block
     }
 
@@ -56,7 +56,7 @@ const getAccountData = async (account: string): Promise<I_Account> => {
 const getCode = async (account: string): Promise<I_Code> => {
     let data: I_Code = {
         address: account,
-        code: await chainWs.getCode(account, block)
+        code: await chainWs.eth.getCode(account, block)
     }
 
     return data

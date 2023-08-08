@@ -15,3 +15,9 @@ export interface I_Transaction {
     to: string,
     contractDeployedAt: string
 }
+
+export interface I_StorageRangeResponse {
+    storage: { [key: string]: any };
+    complete: boolean,
+    nextKey?: string
+}

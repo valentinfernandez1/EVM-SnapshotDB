@@ -1,6 +1,6 @@
 import { BLOCK_HASH } from "../constants/utility";
 import Account from "../models/Account";
-import Tx, { I_Tx } from "../models/Tx";
+import Address, { I_Address } from "../models/Tx"
 
 const block = BLOCK_HASH;
 
@@ -22,23 +22,11 @@ export const getAccountsToQuery = async (): Promise<string[]> => {
     }
 
     //Extract accounts from transactionDB
-    const txs: I_Tx[] = await Tx.find({}, "from to contractDeployedAt");
+    const addresses: I_Address[] = await Address.find({}, "address").lean();
 
     //Push to accounts array if its not in storedAccounts and its not repeated
-    txs.forEach(tx => {
-        storedAccounts.indexOf(tx.from) === -1 
-            && accounts.indexOf(tx.from) === -1 
-            && tx.from != null
-            ? accounts.push(tx.from) : null;
-        storedAccounts.indexOf(tx.to) === -1 
-            && accounts.indexOf(tx.to) === -1 
-            && tx.to != null
-            ? accounts.push(tx.to) : null;
-        storedAccounts.indexOf(tx.contractDeployedAt) === -1 
-            && accounts.indexOf(tx.contractDeployedAt) === -1 
-            && tx.contractDeployedAt 
-            && tx.contractDeployedAt != null
-            ? accounts.push(tx.contractDeployedAt) : null;
+    addresses.forEach(addr => {
+        storedAccounts.indexOf(addr.address) === -1 && addr.address != null ? accounts.push(addr.address) : null;
     });
 
     return accounts;

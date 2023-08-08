@@ -1,24 +1,26 @@
 import Storage, { I_Storage, I_StorageState } from "../models/Storage";
 import Code, { I_Code } from "../models/Code";
 import { BLOCK_HASH, amountOfKeys, chainWs, storageConcurrentLimit } from "../constants/utility";
+import { I_StorageRangeResponse } from "utils/interfaces";
 
 const timeout = 2000;
 const block = BLOCK_HASH;
 
 export const extractStorages = async () => {
     console.log("🔎 Filtering already stored Storage contracts")
-    let contracts: string[] = await getContractsToScrape();
+    let contracts: string[] = (await getContractsToScrape()).reverse();
     console.log(`📦 ${contracts.length} contract storages to be scraped`);
     
     let ongoingPromises = 0 
     let storagePromises = [];
     while(contracts.length > 0){
         for (ongoingPromises; ongoingPromises < storageConcurrentLimit; ongoingPromises++) {
+            let index = contracts.length
             let contractAddress = contracts.pop()
             
             if (contractAddress == null) continue;
             storagePromises.push(
-                getContractStorage(contractAddress).then(() => {
+                getContractStorage(contractAddress, index).then(() => {
                     ongoingPromises -= 1;
                 })
             )
@@ -49,13 +51,13 @@ const getContractsToScrape = async (): Promise<string[]>  => {
     return contracts;
 }
 
-const getContractStorage = async (contract: string) => {
+const getContractStorage = async (contract: string, i: number) => {
     let exit = false;
     let created = false;
     let nextHash = null;
 
     while (!exit) {
-        let partial: I_Storage = await getPartialStorage(contract, amountOfKeys, nextHash);
+        let partial: I_Storage = await getPartialStorage(contract, amountOfKeys, i, nextHash);
 
         //If no nextHash the contract query is complete 
         if (!partial.nextHash) {
@@ -96,18 +98,29 @@ const getContractStorage = async (contract: string) => {
 const getPartialStorage = async (
     contract: string,
     amountOfKeys: number,   //Amount to retrieve from the chain
+    index: number,          //Needed for request id
     from_key?: string      //If null it starts from the first key in storage
 ): Promise<I_Storage> => {
     let starting_key = "0x0000000000000000000000000000000000000000000000000000000000000000"
     from_key ? starting_key = from_key : null;
-    
-    let response = await chainWs.send('debug_storageRangeAt', [
-        block,
-        0,
-        contract,
-        starting_key,
-        amountOfKeys
-    ]);
+    let response: I_StorageRangeResponse
+    try {
+        response = (await chainWs.currentProvider.request({
+            method: 'debug_storageRangeAt', 
+            jsonrpc: "2.0",
+            id: index,
+            params: [
+                block,
+                0,
+                contract,
+                starting_key,
+                amountOfKeys
+            ]
+        })).result as I_StorageRangeResponse;
+    } catch (error) {
+        console.log(error)
+    }
+
 
     console.log(`🕒 ${contract} - ${(new Date()).toTimeString().split(' ')[0]}` )
     let partial_storage = formatStorageData(response.storage);
@@ -123,7 +136,7 @@ const getPartialStorage = async (
         block
     }
 
-    return partialContractStorage
+    return partialContractStorage 
 }
 
 const formatStorageData = (raw_storage: any): I_StorageState[] => {
