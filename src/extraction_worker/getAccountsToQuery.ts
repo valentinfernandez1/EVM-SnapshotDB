@@ -1,6 +1,6 @@
 import { BLOCK_HASH } from "../constants/utility";
 import Account from "../models/Account";
-import Address, { I_Address } from "../models/Tx"
+import Address, { I_Address } from "../models/Address"
 
 const block = BLOCK_HASH;
 
