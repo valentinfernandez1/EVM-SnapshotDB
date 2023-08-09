@@ -4,9 +4,8 @@ export interface I_Storage {
     _id?: string;
     address: string;
     storageState: I_StorageState[];
-    nextHash?: string,
     //Allow to check if the state was fully queried or there was an error
-    complete?: boolean
+    nextHash?: string,
     //If document has reached limit size
     full?: boolean
     block?: string
@@ -32,12 +31,9 @@ const StorageSchema = new mongoose.Schema({
             }
         }
     ],
-    complete: { type: Boolean, default: false },
+    nextHash: { type: String, required: false },
     full: { type: Boolean, default: false },
-    block: {
-        type: String,
-        required: true
-    }
+    block: { type: String, required: true }
 });
 
 export default mongoose.model("Storage", StorageSchema);

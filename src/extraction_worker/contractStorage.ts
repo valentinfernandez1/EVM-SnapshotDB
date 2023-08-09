@@ -7,8 +7,11 @@ const timeout = 2000;
 const block = BLOCK_HASH;
 
 export const extractStorages = async () => {
+    //Purge all storages that are not in this block
+    await Storage.deleteMany({block: { $ne: block }});
+
     console.log("🔎 Filtering already stored Storage contracts")
-    let contracts: string[] = (await getContractsToScrape()).reverse();
+    let contracts: string[] = (await contractsToScrape()).reverse();
     console.log(`📦 ${contracts.length} contract storages to be scraped`);
     
     let ongoingPromises = 0 
@@ -34,53 +37,49 @@ export const extractStorages = async () => {
     console.log("✅ Storage scrapping finished")
 }
 
-const getContractsToScrape = async (): Promise<string[]>  => {
-    //Get contract list
-    let contracts: string[] = (await Code.find({}, "address -_id")).map(contract => {
-        return contract.address
-    });
-    //Get already stored Storages for this block
-    let storages: string[] = (await Storage.find({block: { $eq: block }, complete: true}, "address -_id")).map(storage => {
-        return storage.address
-    });
-
-    contracts = contracts.filter(contract => {
-        return storages.indexOf(contract) === -1
-    })
-
-    return contracts;
-}
-
 const getContractStorage = async (contract: string, i: number) => {
     let exit = false;
     let created = false;
-    let nextHash = null;
+    let fromHash = null;
 
     while (!exit) {
-        let partial: I_Storage = await getPartialStorage(contract, amountOfKeys, i, nextHash);
+        //Check if there's already a storage to continue pulling
+        if (!fromHash){
+            let continueFrom = (await Storage.findOne({
+                address: contract, 
+                nextHash: { $ne: null }
+            }, 
+            "nextHash -_id"
+            ).lean());
+
+            if (continueFrom){
+                created = true;
+                fromHash = continueFrom.nextHash;
+            }
+        }
+
+        let partial: I_Storage = await getPartialStorage(contract, amountOfKeys, i, fromHash);
+
+        fromHash = partial.nextHash
 
         //If no nextHash the contract query is complete 
         if (!partial.nextHash) {
             exit = true
-            partial.complete = true
-        };
+        }
 
-        nextHash = partial.nextHash
-
-        //If this is the first iteration delete just in case it has old data
         if (!created) {
-            await Storage.deleteMany({ address: contract });
             await Storage.create(partial)
             created = true;
         } else {
             try {
                 await Storage.findOneAndUpdate(
                     { address: contract, full: false },
-                    { $push: { storageState: partial.storageState } }
+                    { $push: { storageState: partial.storageState }, $set: { nextHash: partial.nextHash} }
                 )
 
-                //Set all the associated storages as completed for this contract
-                partial.complete ? await Storage.updateMany({ address: contract }, { $set: { complete: true } }) : null;
+                // Set all the associated nextHash as null, 
+                // this means that the contract storage pull was complete
+                !partial.nextHash ? await Storage.updateMany({ address: contract }, { $set: { nextHash: null } }) : null;
             } catch (error) {
                 if (error.codeName != "BSONObjectTooLarge") {
                     console.log(error);
@@ -99,10 +98,10 @@ const getPartialStorage = async (
     contract: string,
     amountOfKeys: number,   //Amount to retrieve from the chain
     index: number,          //Needed for request id
-    from_key?: string      //If null it starts from the first key in storage
+    from_hash?: string      //If null it starts from the first key in storage
 ): Promise<I_Storage> => {
     let starting_key = "0x0000000000000000000000000000000000000000000000000000000000000000"
-    from_key ? starting_key = from_key : null;
+    from_hash ? starting_key = from_hash : null;
     let response: I_StorageRangeResponse
     try {
         response = (await chainWs.currentProvider.request({
@@ -121,22 +120,36 @@ const getPartialStorage = async (
         console.log(error)
     }
 
-
     console.log(`🕒 ${contract} - ${(new Date()).toTimeString().split(' ')[0]}` )
     let partial_storage = formatStorageData(response.storage);
-
-    let nextHash = null;
-    !response.complete ? nextHash = response.nextKey : null;
 
     let partialContractStorage: I_Storage = {
         address: contract,
         storageState: partial_storage,
-        nextHash,
-        complete: response.complete,
+        nextHash: response.nextKey,
         block
     }
 
     return partialContractStorage 
+}
+
+const contractsToScrape = async (): Promise<string[]>  => {
+    //Get contract list from DB
+    let contracts: string[] = (await Code.find({}, "address -_id")).map(contract => {
+        return contract.address
+    });
+
+    //Get already stored Storages for this block
+    let storages: string[] = (await Storage.find({block: { $eq: block }, nextHash: null}, "address -_id")).map(storage => {
+        return storage.address
+    });
+
+    //Filter contracts that are not in the storages list
+    contracts = contracts.filter(contract => {
+        return storages.indexOf(contract) === -1
+    })
+
+    return contracts;
 }
 
 const formatStorageData = (raw_storage: any): I_StorageState[] => {
@@ -156,7 +169,7 @@ const handleStorageOverflow = async (partialStorage: I_Storage) => {
     //Mark the current storage document as full
     await Storage.findOneAndUpdate(
         { address: partialStorage.address, full: false },
-        { $set: { full: true } }
+        { $set: { full: true, nextHash: null } }
     )
 
     //Create new storage document for contract
@@ -164,6 +177,7 @@ const handleStorageOverflow = async (partialStorage: I_Storage) => {
     await Storage.create({
         address: partialStorage.address,
         storageState: partialStorage.storageState,
-        block: partialStorage.block
+        block: partialStorage.block,
+        nextHash: partialStorage.nextHash
     })
 }

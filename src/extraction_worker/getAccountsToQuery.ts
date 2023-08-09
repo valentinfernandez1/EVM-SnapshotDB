@@ -5,7 +5,7 @@ import Address, { I_Address } from "../models/Address"
 const block = BLOCK_HASH;
 
 export const getAccountsToQuery = async (): Promise<string[]> => {
-    let accounts: string[] = [];
+    
 
     //Filter accounts that are already in DB for this block.
     let storedAccounts: string[];
@@ -25,9 +25,7 @@ export const getAccountsToQuery = async (): Promise<string[]> => {
     const addresses: string[] = await Address.distinct("address").lean();
 
     //Push to accounts array if its not in storedAccounts and its not repeated
-    addresses.forEach(address => {
-        storedAccounts.indexOf(address) === -1 && address != null ? accounts.push(address) : null;
-    });
+    let accounts: string[] = addresses.filter(address => (storedAccounts.indexOf(address) === -1 && address != null));
 
     return accounts;
 }
