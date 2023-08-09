@@ -6,17 +6,9 @@ export interface I_Address {
 }
 
 const AddressSchema = new mongoose.Schema({
-	from: {
+	address: {
 		type: String,
 		required: true,
-	},
-	to: {
-		type: String,
-		required: true,
-	},
-	contractDeployedAt: {
-		type: String,
-		required: false,
 	},
 }, {collection: 'accounts'});
 

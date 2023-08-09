@@ -22,11 +22,11 @@ export const getAccountsToQuery = async (): Promise<string[]> => {
     }
 
     //Extract accounts from transactionDB
-    const addresses: I_Address[] = await Address.find({}, "address").lean();
+    const addresses: string[] = await Address.distinct("address").lean();
 
     //Push to accounts array if its not in storedAccounts and its not repeated
-    addresses.forEach(addr => {
-        storedAccounts.indexOf(addr.address) === -1 && addr.address != null ? accounts.push(addr.address) : null;
+    addresses.forEach(address => {
+        storedAccounts.indexOf(address) === -1 && address != null ? accounts.push(address) : null;
     });
 
     return accounts;
