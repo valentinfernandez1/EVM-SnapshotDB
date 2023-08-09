@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 export interface I_Code {
 	_id?: string;
@@ -17,4 +17,4 @@ const CodeShema = new mongoose.Schema({
 	},
 });
 
-export default mongoose.model("Code", CodeShema);
+export default mongoose.model('Code', CodeShema);

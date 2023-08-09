@@ -1,15 +1,18 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 export interface I_Address {
-    address: string,
-    _id?: string
+	address: string;
+	_id?: string;
 }
 
-const AddressSchema = new mongoose.Schema({
-	address: {
-		type: String,
-		required: true,
+const AddressSchema = new mongoose.Schema(
+	{
+		address: {
+			type: String,
+			required: true,
+		},
 	},
-}, {collection: 'accounts'});
+	{ collection: 'accounts' }
+);
 
-export default mongoose.model("Address", AddressSchema);
+export default mongoose.model('Address', AddressSchema);
