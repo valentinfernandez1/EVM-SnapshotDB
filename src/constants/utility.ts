@@ -5,7 +5,7 @@ require('dotenv').config();
 
 export const storageConcurrentLimit: number = 1500;
 export const accountsBatchSize: number = 3000;
-export const amountOfKeys: number = 1450;
+export const amountOfKeys: number = 14500;
 export const BLOCK_HASH: string = process.env.BLOCK_HASH;
 
 const customWsProvider = new WebSocketProvider('wss://p-reader.mythical.engineering/ws', {

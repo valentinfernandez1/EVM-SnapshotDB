@@ -1,7 +1,7 @@
 import Storage, { I_Storage, I_StorageState } from '../models/Storage';
-import Code, { I_Code } from '../models/Code';
+import Code from '../models/Code';
 import { BLOCK_HASH, amountOfKeys, chainWs, storageConcurrentLimit } from '../constants/utility';
-import { I_StorageRangeResponse } from 'utils/interfaces';
+import { I_StorageRangeResponse } from '../utils/interfaces';
 
 const timeout = 2000;
 const block = BLOCK_HASH;
