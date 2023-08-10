@@ -1,6 +1,6 @@
-import connectWithRetry from "./src/utils/db";
+import connectWithRetry from './src/utils/db';
 
-require("dotenv").config();
+require('dotenv').config();
 
 const mongoDB = process.env.MONGO_DB_URL;
 
