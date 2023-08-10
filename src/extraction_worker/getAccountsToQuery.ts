@@ -20,12 +20,17 @@ export const getAccountsToQuery = async (): Promise<string[]> => {
 	}
 
 	//Extract accounts from transactionDB
-	const addresses: string[] = await Address.distinct('address').lean();
+	const addresses: I_Address[] = await Address.find({}, 'address -_id').lean();
 
+	console.log('🔎 Filtering already stored accounts');
 	//Push to accounts array if its not in storedAccounts and its not repeated
-	let accounts: string[] = addresses.filter(
-		(address) => storedAccounts.indexOf(address) === -1 && address != null
-	);
+	let accounts: string[] = [];
+
+	addresses.forEach((address) => {
+		storedAccounts.indexOf(address.address) === -1 && address.address != null
+			? accounts.push(address.address)
+			: null;
+	});
 
 	return accounts;
 };

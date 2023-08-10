@@ -3,7 +3,7 @@ import { storageConcurrentLimit } from '../constants/utility';
 import { I_BE_Response } from 'utils/interfaces';
 
 const timeout = 2000;
-const size = 1000;
+const size = 50000;
 
 export const getAccountsFromBE = async () => {
 	console.log('🔎 Retrieving the accounts from Sirato');
@@ -22,7 +22,7 @@ export const getAccountsFromBE = async () => {
 	console.log(response.paging.totalElements);
 
 	while (keepGoing) {
-		for (ongoingPromises; ongoingPromises < 50; ongoingPromises++) {
+		for (ongoingPromises; ongoingPromises < 4; ongoingPromises++) {
 			page++;
 			promises.push(
 				getAccountsPage(page).then((retrievedAccounts) => {
@@ -38,6 +38,9 @@ export const getAccountsFromBE = async () => {
 	}
 
 	await Promise.all(promises);
+	console.log('Retrieve done');
+
+	return accounts;
 };
 
 const getAccountsPage = async (page: number): Promise<string[]> => {

@@ -1,11 +1,13 @@
 import Account, { I_Account } from '../models/Account';
-import { chainWs, accountsBatchSize, BLOCK_HASH } from '../constants/utility';
+import { accountsBatchSize, BLOCK_HASH } from '../constants/utility';
 import Code, { I_Code } from '../models/Code';
+import Web3 from 'web3';
 
 const block = BLOCK_HASH;
 
-export const extractAccounts = async (accounts: string[]) => {
+export const extractAccounts = async (accounts: string[], chainWs: Web3) => {
 	console.log(`👥 ${accounts.length} accounts to be scraped`);
+	console.log(accounts);
 
 	let skip = 0;
 	let iterations = Math.ceil(accounts.length / accountsBatchSize);
@@ -14,7 +16,7 @@ export const extractAccounts = async (accounts: string[]) => {
 
 		let accountPromises = [];
 		for (const account of accounts.slice(skip, skip + accountsBatchSize)) {
-			accountPromises.push(getAccountData(account));
+			accountPromises.push(getAccountData(account, chainWs));
 		}
 		await Promise.all(accountPromises);
 		skip = skip + accountsBatchSize;
@@ -22,14 +24,15 @@ export const extractAccounts = async (accounts: string[]) => {
 	console.log(`✅ Account scrapping done`);
 };
 
-const getAccountData = async (account: string): Promise<I_Account> => {
+const getAccountData = async (account: string, chainWs: Web3): Promise<I_Account> => {
+	console.log(account);
 	let accountData: I_Account = {
 		address: account,
 		balance: (await chainWs.eth.getBalance(account, block)).toString(),
 		nonce: Number(await chainWs.eth.getTransactionCount(account, block)),
 		block,
 	};
-
+	console.log('here');
 	Account.updateOne(
 		{ address: accountData.address }, //Filter
 		accountData, //document
@@ -38,7 +41,7 @@ const getAccountData = async (account: string): Promise<I_Account> => {
 		console.log(err);
 	});
 
-	const contractCode: I_Code = await getCode(account);
+	const contractCode: I_Code = await getCode(account, chainWs);
 
 	//Verify if the account is not a contract
 	if (contractCode.code.length <= 2) {
@@ -54,7 +57,7 @@ const getAccountData = async (account: string): Promise<I_Account> => {
 	});
 };
 
-const getCode = async (account: string): Promise<I_Code> => {
+const getCode = async (account: string, chainWs: Web3): Promise<I_Code> => {
 	let data: I_Code = {
 		address: account,
 		code: await chainWs.eth.getCode(account, block),

@@ -1,12 +1,13 @@
 import Storage, { I_Storage, I_StorageState } from '../models/Storage';
 import Code from '../models/Code';
-import { BLOCK_HASH, amountOfKeys, chainWs, storageConcurrentLimit } from '../constants/utility';
+import { BLOCK_HASH, amountOfKeys, storageConcurrentLimit } from '../constants/utility';
 import { I_StorageRangeResponse } from '../utils/interfaces';
+import Web3 from 'web3';
 
 const timeout = 2000;
 const block = BLOCK_HASH;
 
-export const extractStorages = async () => {
+export const extractStorages = async (chainWs: Web3) => {
 	//Purge all storages that are not in this block
 	await Storage.deleteMany({ block: { $ne: block } });
 
@@ -23,7 +24,7 @@ export const extractStorages = async () => {
 
 			if (contractAddress == null) continue;
 			storagePromises.push(
-				getContractStorage(contractAddress, index).then(() => {
+				getContractStorage(contractAddress, index, chainWs).then(() => {
 					ongoingPromises -= 1;
 				})
 			);
@@ -37,7 +38,7 @@ export const extractStorages = async () => {
 	console.log('✅ Storage scrapping finished');
 };
 
-const getContractStorage = async (contract: string, i: number) => {
+const getContractStorage = async (contract: string, i: number, chainWs: Web3) => {
 	let exit = false;
 	let created = false;
 	let fromHash = null;
@@ -59,7 +60,7 @@ const getContractStorage = async (contract: string, i: number) => {
 			}
 		}
 
-		let partial: I_Storage = await getPartialStorage(contract, amountOfKeys, i, fromHash);
+		let partial: I_Storage = await getPartialStorage(contract, amountOfKeys, i, chainWs, fromHash);
 
 		fromHash = partial.nextHash;
 
@@ -101,6 +102,7 @@ const getPartialStorage = async (
 	contract: string,
 	amountOfKeys: number, //Amount to retrieve from the chain
 	index: number, //Needed for request id
+	chainWs: Web3,
 	from_hash?: string //If null it starts from the first key in storage
 ): Promise<I_Storage> => {
 	let starting_key = '0x0000000000000000000000000000000000000000000000000000000000000000';
