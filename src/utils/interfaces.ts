@@ -21,3 +21,7 @@ export interface I_StorageRangeResponse {
 	complete: boolean;
 	nextKey?: string;
 }
+
+export interface I_BE_Response {
+	data: { address: string }[];
+}
