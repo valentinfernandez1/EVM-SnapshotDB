@@ -147,9 +147,16 @@ const contractsToScrape = async (): Promise<string[]> => {
 		return storage.address;
 	});
 
-	//Filter contracts that are not in the storages list
+	let unfinishedStorages: string[] = (
+		await Storage.find({ block: { $eq: block }, nextHash: { $ne: null } }, 'address -_id')
+	).map((storage) => {
+		return storage.address;
+	});
+
+	// Filter contracts that are already stored
+	// or if stored they were not completed
 	contracts = contracts.filter((contract) => {
-		return storages.indexOf(contract) === -1;
+		return storages.indexOf(contract) === -1 || unfinishedStorages.indexOf(contract) != -1;
 	});
 
 	return contracts;

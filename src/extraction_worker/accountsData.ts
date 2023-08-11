@@ -7,7 +7,6 @@ const block = BLOCK_HASH;
 
 export const extractAccounts = async (accounts: string[], chainWs: Web3) => {
 	console.log(`👥 ${accounts.length} accounts to be scraped`);
-	console.log(accounts);
 
 	let skip = 0;
 	let iterations = Math.ceil(accounts.length / accountsBatchSize);
@@ -25,14 +24,12 @@ export const extractAccounts = async (accounts: string[], chainWs: Web3) => {
 };
 
 const getAccountData = async (account: string, chainWs: Web3): Promise<I_Account> => {
-	console.log(account);
 	let accountData: I_Account = {
 		address: account,
 		balance: (await chainWs.eth.getBalance(account, block)).toString(),
 		nonce: Number(await chainWs.eth.getTransactionCount(account, block)),
 		block,
 	};
-	console.log('here');
 	Account.updateOne(
 		{ address: accountData.address }, //Filter
 		accountData, //document
