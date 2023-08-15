@@ -1,6 +1,7 @@
 import { BLOCK_HASH } from '../constants/utility';
 import Account from '../models/Account';
 import Address, { I_Address } from '../models/Address';
+import { getAccountsFromBE } from './getAccountsFromBE';
 
 const block = BLOCK_HASH;
 
@@ -19,18 +20,27 @@ export const getAccountsToQuery = async (): Promise<string[]> => {
 		process.exit(0);
 	}
 
-	//Extract accounts from transactionDB
-	const addresses: I_Address[] = await Address.find({}, 'address -_id').lean();
-
-	console.log('🔎 Filtering already stored accounts');
 	//Push to accounts array if its not in storedAccounts and its not repeated
 	let accounts: string[] = [];
 
+	//Extract accounts from transactionDB
+	const addresses: I_Address[] = await Address.find(
+		{ address: { $ne: null } },
+		'address -_id'
+	).lean();
+
+	console.log('🔎 Filtering already stored accounts');
 	addresses.forEach((address) => {
-		storedAccounts.indexOf(address.address) === -1 && address.address != null
-			? accounts.push(address.address)
-			: null;
+		storedAccounts.indexOf(address.address) === -1 ? accounts.push(address.address) : null;
 	});
+
+	/* //Extract accounts from BlockExplorer
+	const addresses: string[] = await getAccountsFromBE();
+
+	console.log('🔎 Filtering already stored accounts');
+	addresses.forEach((address) => {
+		storedAccounts.indexOf(address) === -1 && address != null ? accounts.push(address) : null;
+	}); */
 
 	return accounts;
 };

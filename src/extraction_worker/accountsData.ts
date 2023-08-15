@@ -1,40 +1,56 @@
 import Account, { I_Account } from '../models/Account';
 import { accountsBatchSize, BLOCK_HASH } from '../constants/utility';
 import Code, { I_Code } from '../models/Code';
-import Web3 from 'web3';
+import Web3, { WebSocketProvider } from 'web3';
 
+const timeout = 2000;
 const block = BLOCK_HASH;
 
-export const extractAccounts = async (accounts: string[], chainWs: Web3) => {
+require('dotenv').config();
+
+export const extractAccounts = async (accounts: string[]) => {
+	//Instatiate websocket
+	console.log('Starting WebSocket connection');
+	const customWsProvider = new WebSocketProvider('wss://p-reader.mythical.engineering/ws', {
+		headers: {
+			'X-API-Key': process.env.BESU_API_KEY,
+		},
+		timeout: 60000,
+	});
+
+	const chainWs = new Web3(customWsProvider);
+
 	console.log(`👥 ${accounts.length} accounts to be scraped`);
 
-	let skip = 0;
-	let iterations = Math.ceil(accounts.length / accountsBatchSize);
-	for (let i = 0; i < iterations; i++) {
-		console.log(`🟡 Account Extraction - Iteration ${i + 1} of ${iterations}`);
+	let ongoingPromises = 0;
+	let accountPromises = [];
+	while (accounts.length > 0) {
+		for (ongoingPromises; ongoingPromises < accountsBatchSize; ongoingPromises++) {
+			let accountAddress = accounts.pop();
 
-		let accountPromises = [];
-		for (const account of accounts.slice(skip, skip + accountsBatchSize)) {
-			accountPromises.push(getAccountData(account, chainWs));
+			accountPromises.push(
+				getAccountData(accountAddress, chainWs).then(() => {
+					ongoingPromises -= 1;
+					console.log(`${accounts.length} accounts left`);
+				})
+			);
 		}
-		await Promise.all(accountPromises);
-		skip = skip + accountsBatchSize;
+
+		await new Promise((resolve) => setTimeout(resolve, Number(timeout)));
 	}
+	await Promise.all(accountPromises);
 	console.log(`✅ Account scrapping done`);
 };
 
 const getAccountData = async (account: string, chainWs: Web3): Promise<I_Account> => {
+	if (!account) return;
 	let accountData: I_Account = {
 		address: account,
 		balance: (await chainWs.eth.getBalance(account, block)).toString(),
 		nonce: Number(await chainWs.eth.getTransactionCount(account, block)),
 		block,
 	};
-	Account.updateOne(
-		{ address: accountData.address }, //Filter
-		accountData, //document
-		{ upsert: true } //If document doesn't exist create it
-	).catch((err) => {
+	Account.create(accountData).catch((err) => {
 		console.log(err);
 	});
 
@@ -44,10 +60,6 @@ const getAccountData = async (account: string, chainWs: Web3): Promise<I_Account
 	if (contractCode.code.length <= 2) {
 		return;
 	}
-
-	//Contract code won't change so once it's stored
-	//There's no need to update like accounts or storage
-	if (await Code.countDocuments({ address: account })!) return;
 
 	Code.create(contractCode).catch((err) => {
 		console.log(err);

@@ -2,18 +2,30 @@ import Storage, { I_Storage, I_StorageState } from '../models/Storage';
 import Code from '../models/Code';
 import { BLOCK_HASH, amountOfKeys, storageConcurrentLimit } from '../constants/utility';
 import { I_StorageRangeResponse } from '../utils/interfaces';
-import Web3 from 'web3';
+import Web3, { WebSocketProvider } from 'web3';
 
 const timeout = 2000;
 const block = BLOCK_HASH;
+require('dotenv').config();
 
-export const extractStorages = async (chainWs: Web3) => {
+export const extractStorages = async () => {
 	//Purge all storages that are not in this block
 	await Storage.deleteMany({ block: { $ne: block } });
 
 	console.log('🔎 Filtering already stored Storage contracts');
-	let contracts: string[] = (await contractsToScrape()).reverse();
+	let contracts: string[] = await contractsToScrape();
 	console.log(`📦 ${contracts.length} contract storages to be scraped`);
+
+	//Instatiate websocket
+	console.log('Starting WebSocket connection');
+	const customWsProvider = new WebSocketProvider('wss://p-reader.mythical.engineering/ws', {
+		headers: {
+			'X-API-Key': process.env.BESU_API_KEY,
+		},
+		timeout: 60000,
+	});
+
+	const chainWs = new Web3(customWsProvider);
 
 	let ongoingPromises = 0;
 	let storagePromises = [];
