@@ -7,6 +7,7 @@ import Web3, { WebSocketProvider } from 'web3';
 const timeout = 2000;
 const block = BLOCK_HASH;
 require('dotenv').config();
+const RPC_WS_URL = process.env.RPC_WS_URL;
 
 export const extractStorages = async () => {
 	//Purge all storages that are not in this block
@@ -18,7 +19,7 @@ export const extractStorages = async () => {
 
 	//Instatiate websocket
 	console.log('Starting WebSocket connection');
-	const customWsProvider = new WebSocketProvider('wss://p-reader.mythical.engineering/ws', {
+	const customWsProvider = new WebSocketProvider(RPC_WS_URL, {
 		headers: {
 			'X-API-Key': process.env.BESU_API_KEY,
 		},

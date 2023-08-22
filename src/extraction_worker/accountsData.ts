@@ -3,6 +3,9 @@ import { accountsBatchSize, BLOCK_HASH } from '../constants/utility';
 import Code, { I_Code } from '../models/Code';
 import Web3, { WebSocketProvider } from 'web3';
 
+require('dotenv').config();
+const RPC_WS_URL = process.env.RPC_WS_URL;
+
 const timeout = 2000;
 const block = BLOCK_HASH;
 
@@ -11,10 +14,8 @@ require('dotenv').config();
 export const extractAccounts = async (accounts: string[]) => {
 	//Instatiate websocket
 	console.log('Starting WebSocket connection');
-	const customWsProvider = new WebSocketProvider('wss://p-reader.mythical.engineering/ws', {
-		headers: {
-			'X-API-Key': process.env.BESU_API_KEY,
-		},
+	const customWsProvider = new WebSocketProvider(RPC_WS_URL, {
+		headers: {},
 		timeout: 60000,
 	});
 

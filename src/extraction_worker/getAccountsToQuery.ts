@@ -1,3 +1,4 @@
+import Code from '../models/Code';
 import { BLOCK_HASH } from '../constants/utility';
 import Account from '../models/Account';
 import Address, { I_Address } from '../models/Address';
@@ -10,6 +11,7 @@ export const getAccountsToQuery = async (): Promise<string[]> => {
 	let storedAccounts: string[];
 	try {
 		await Account.deleteMany({ block: { $ne: block } });
+		await Code.deleteMany({ block: { $ne: block } });
 
 		let retrievedAccounts = await Account.find({}, 'address -_id');
 		storedAccounts = retrievedAccounts.map((account) => {
@@ -31,7 +33,7 @@ export const getAccountsToQuery = async (): Promise<string[]> => {
 
 	console.log('🔎 Filtering already stored accounts');
 	addresses.forEach((address) => {
-		storedAccounts.indexOf(address.address) === -1 ? accounts.push(address.address) : null;
+		storedAccounts.indexOf(address.address) === -1 && accounts.indexOf(address.address) === -1? accounts.push(address.address) : null;
 	});
 
 	/* //Extract accounts from BlockExplorer
