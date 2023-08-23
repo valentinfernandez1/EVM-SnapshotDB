@@ -15,7 +15,9 @@ export const extractAccounts = async (accounts: string[]) => {
 	//Instatiate websocket
 	console.log('Starting WebSocket connection');
 	const customWsProvider = new WebSocketProvider(RPC_WS_URL, {
-		headers: {},
+		headers: {
+			'X-API-Key': process.env.BESU_API_KEY,
+		},
 		timeout: 60000,
 	});
 
@@ -51,6 +53,12 @@ const getAccountData = async (account: string, chainWs: Web3): Promise<I_Account
 		nonce: Number(await chainWs.eth.getTransactionCount(account, block)),
 		block,
 	};
+
+	//If account empty it can be discarded
+	if (accountData.balance == '0' && accountData.nonce == 0) {
+		return;
+	}
+
 	Account.create(accountData).catch((err) => {
 		console.log(err);
 	});
