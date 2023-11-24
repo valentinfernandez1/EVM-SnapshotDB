@@ -48,7 +48,7 @@ export const extractStorages = async () => {
 
 	await Promise.all(storagePromises);
 
-	console.log('✅ Storage scrapping finished');
+	console.log('✅ Storage scraping finished');
 };
 
 const getContractStorage = async (contract: string, i: number, chainWs: Web3) => {

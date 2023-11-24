@@ -4,6 +4,7 @@ export interface I_Code {
 	_id?: string;
 	address: string;
 	code?: string;
+	hash?: string;
 }
 
 const CodeShema = new mongoose.Schema({
@@ -12,6 +13,10 @@ const CodeShema = new mongoose.Schema({
 		required: true,
 	},
 	code: {
+		type: String,
+		required: true,
+	},
+	hash: {
 		type: String,
 		required: true,
 	},

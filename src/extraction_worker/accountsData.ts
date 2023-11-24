@@ -2,6 +2,7 @@ import Account, { I_Account } from '../models/Account';
 import { accountsBatchSize, BLOCK_HASH } from '../constants/utility';
 import Code, { I_Code } from '../models/Code';
 import Web3, { WebSocketProvider } from 'web3';
+import blake2 from 'blake2';
 
 require('dotenv').config();
 const RPC_WS_URL = process.env.RPC_WS_URL;
@@ -42,7 +43,7 @@ export const extractAccounts = async (accounts: string[]) => {
 		await new Promise((resolve) => setTimeout(resolve, Number(timeout)));
 	}
 	await Promise.all(accountPromises);
-	console.log(`✅ Account scrapping done`);
+	console.log(`✅ Account scraping done`);
 };
 
 const getAccountData = async (account: string, chainWs: Web3): Promise<I_Account> => {
@@ -76,10 +77,17 @@ const getAccountData = async (account: string, chainWs: Web3): Promise<I_Account
 };
 
 const getCode = async (account: string, chainWs: Web3): Promise<I_Code> => {
+	let code = await chainWs.eth.getCode(account, block);
+	let hash = blake2.createHash('blake2b');
+	hash.update(Buffer.from(code));
+
 	let data: I_Code = {
 		address: account,
-		code: await chainWs.eth.getCode(account, block),
+		code,
+		hash: hash.digest('hex'),
 	};
 
 	return data;
 };
+
+//Nft Hash = 30b594fe237e26085cc0d00d78d7cf13628fd3ca10cb5ee8f8e085eba52dcbe9b758f99712c6280f9747b6f5e81dcad226f2c5de1b89bbaf27426302949d69ef
