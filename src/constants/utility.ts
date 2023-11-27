@@ -7,3 +7,7 @@ export const endBlock: number = 14925651;
 export const amountOfKeys: number = 29000;
 export const BLOCK_HASH: string = process.env.BLOCK_HASH;
 export const RPC_EVENT_BLOCK_RANGE = 5000;
+
+export function date() {
+	return `🕒 ${new Date().toTimeString().split(' ')[0]}`;
+}
