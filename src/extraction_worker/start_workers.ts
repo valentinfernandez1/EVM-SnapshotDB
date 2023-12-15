@@ -6,10 +6,10 @@ import { nftScraper } from './nftScraper';
 require('dotenv').config();
 
 export const start_extraction_workers = async () => {
-	/* 	let accounts: string[] = await getAccountsToQuery();
+	let accounts: string[] = await getAccountsToQuery();
 
 	await extractAccounts(accounts);
-	await extractStorages(); */
-	await nftScraper();
+	/* await extractStorages(); 
+	await nftScraper(); */
 	return;
 };

@@ -32,8 +32,8 @@ export const getAccountsToQuery = async (): Promise<string[]> => {
 	).lean();
 
 	console.log('🔎 Filtering already stored accounts');
-	addresses.forEach((address) => {
-		storedAccounts.indexOf(address.address) === -1 && accounts.indexOf(address.address) === -1? accounts.push(address.address) : null;
+	addresses.forEach((address, index) => {
+		storedAccounts.indexOf(address.address) === -1 ? accounts.push(address.address) : null;
 	});
 
 	/* //Extract accounts from BlockExplorer
@@ -46,3 +46,5 @@ export const getAccountsToQuery = async (): Promise<string[]> => {
 
 	return accounts;
 };
+
+let comparer = async (address) => {};

@@ -17,7 +17,7 @@ export const extractAccounts = async (accounts: string[]) => {
 	console.log('Starting WebSocket connection');
 	const customWsProvider = new WebSocketProvider(RPC_WS_URL, {
 		headers: {
-			'X-API-Key': process.env.BESU_API_KEY,
+			'X-API-Key': process.env.BESU_API_KEY || '',
 		},
 		timeout: 60000,
 	});

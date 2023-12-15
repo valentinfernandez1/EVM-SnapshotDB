@@ -1,39 +1,47 @@
 import Web3, { Contract, HttpProvider, WebSocketProvider } from 'web3';
 import saga721Abi from '../constants/abi/saga721Abi.json';
 import DMarket721Abi from '../constants/abi/dmarket721Abi.json';
-import { RPC_EVENT_BLOCK_RANGE, date, endBlock, nftBatchSize } from '../constants/utility';
+import { date, endBlock, nftBatchSize } from '../constants/utility';
 import NftCollection, { I_NftCollection, I_NftCollectionData } from '../models/Nfts/NftCollection';
 import Nft, { I_Nft } from '../models/Nfts/Nft';
+
 require('dotenv').config();
 
 const RPC_WS_URL = process.env.RPC_WS_URL;
 const timeout = 500;
+export const RPC_EVENT_BLOCK_RANGE = 5000;
 
 export const nftScraper = async () => {
 	//Instatiate websocket
 	console.log('Starting WebSocket connection');
 	const customWsProvider = new WebSocketProvider(RPC_WS_URL, {
 		headers: {
-			'X-API-Key': process.env.BESU_API_KEY,
+			'X-API-Key': process.env.BESU_API_KEY || '',
 		},
 		timeout: 60000,
 	});
 	const chainWs = new Web3(customWsProvider);
 
 	const nfts: I_NftCollection[] = await NftCollection.find({}, 'address type -_id');
+	const contract = new chainWs.eth.Contract(saga721Abi, nfts[0].address);
+	// @ts-ignore
+	let result = await contract.getPastEvents('Transfer', {
+		fromBlock: 14925651,
+		toBlock: 14925653,
+	});
 
 	//Query historic events to get the tokenIds for an Nft Collection
-	/* 	console.log(`[NftScraper] Starting scraping process for ${nfts.length} NFT collections`);
+	/* console.log(`[NftScraper] Starting scraping process for ${nfts.length} NFT collections`);
 	for await (const nft of nfts) {
 		await findNftIds(nft, endBlock, chainWs);
 	}
 	console.log(`[NftScraper] Nft tokenId scraping done`); */
 
 	//Query data of Nft Collection and token of the collection
-	console.log(`[NftScraper] Starting token data population`);
+	/* console.log(`[NftScraper] Starting token data population`);
 	for await (const nft of nfts) {
 		await populateNftData(nft, chainWs);
-	}
+	} */
 };
 
 const findNftIds = async (nft: I_NftCollection, endBlock: number, chainWs: Web3): Promise<void> => {
@@ -113,13 +121,11 @@ const populateNftData = async (nft: I_NftCollection, chainWs: Web3) => {
 	let abi = [];
 	nft.type == 'Saga721' ? (abi = saga721Abi) : (abi = DMarket721Abi);
 
-	const contract = new chainWs.eth.Contract(abi, nft.address);
+	const contract = new chainWs.eth.Contract(abi, '0xdad15807359b449c80bc85b1ec13ed5b4addb4b4');
 
 	//Get Nft collection data
 	const collectionData: I_NftCollectionData = {
-		name: await contract.methods.name().call(),
-		symbol: await contract.methods.symbol().call(),
-		minter: await contract.methods.owner().call(),
+		name: await contract.methods.name().call({ from: '500000' }),
 	};
 
 	console.log(collectionData);
